@@ -1,4 +1,5 @@
 import numpy as np
+import pytesseract
 from PIL import Image
 from fastapi import status
 from ultralytics import YOLO
@@ -77,27 +78,29 @@ class SERVICE:
                             content={"message":"Sucessfully Deleted User"})
         
     async def GetLicensePlateNumber(self, image):
-        image = np.array(Image.open(image))
-        pre_trained_yolo_model = YOLO(model_path)
-    
-        prediction = pre_trained_yolo_model(file_path)
+        image = np.array(Image.open(image).convert("RGB"))
+        pre_trained_yolo_model = YOLO(r"model\best.pt")
+        prediction = pre_trained_yolo_model(image)
     
         pred_info = prediction[0].boxes
     
-        loaded_image = np.array(Image.open(file_path).convert("RGB"))
-    
-        if len(pred_info.xyxy.to("cpu").numpy()) == 1:
-            pred_xmin, pred_ymin, pred_xmax, pred_ymax = pred_info.xyxy.to("cpu").numpy().flatten().astype(np.int32)
+        if len(pred_info.xyxy.numpy()) == 1:
+            pred_xmin, pred_ymin, pred_xmax, pred_ymax = pred_info.xyxy.numpy().flatten().astype(np.int32)
             
-            roi = loaded_image[pred_ymin:pred_ymax, pred_xmin:pred_xmax]
+            roi = image[pred_ymin:pred_ymax, pred_xmin:pred_xmax]
+            
+            plate_number = pytesseract.image_to_string(roi).replace("\n", "")
             
             return JSONResponse(status_code=status.HTTP_200_OK,  
-                            content={"PlateNumber":f"{pytesseract.image_to_string(roi)}"})
+                            content={"PlateNumber":f"{plate_number}"})
         else:
-            for (xmin, ymin, xmax, ymax) in pred_info.xyxy.to("cpu").numpy().astype(np.int32):
+            plate_numbers = []
+            for (xmin, ymin, xmax, ymax) in pred_info.xyxy.numpy().astype(np.int32):
                 
-                roi = loaded_image[ymin:ymax, xmin : xmax]
+                roi = image[ymin:ymax, xmin : xmax]
+                
+                plate_numbers.append(pytesseract.image_to_string(roi).replace("\n", ""))
             
-                return JSONResponse(status_code=status.HTTP_200_OK,  
-                            content={"PlateNumber":f"{pytesseract.image_to_string(roi)}"})
-            
+            return JSONResponse(status_code=status.HTTP_200_OK,  
+                        content={"PlateNumber":f"{plate_numbers}"})
+    

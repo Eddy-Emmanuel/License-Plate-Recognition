@@ -1,7 +1,8 @@
+import io
 from typing import Annotated
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, status, Depends, HTTPException
+from fastapi import APIRouter, status, Depends, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 
 import sys
@@ -9,7 +10,7 @@ sys.path.append("./")
 from backend_config.service import SERVICE
 from database_folder.create_session import GetDatabase
 from backend_config.schema import RegistrationForm, RegistrationSuccessResponse,\
-                                  Token, DeleteResponse, UserDetails
+                                  Token, DeleteResponse, UserDetails, PlateNumber
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
@@ -61,6 +62,23 @@ async def get_user_details(token:Annotated[str, Depends(oauth2_scheme)],
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, 
                             detail="Unable to delete user")
     
+    
+@router.post("/get_prediction",
+            tags=["Get plate number"],
+            status_code=status.HTTP_200_OK,
+            response_model=PlateNumber)
+async def GetPlateCharacter(image:UploadFile, 
+                            token:str=Depends(oauth2_scheme),
+                            db:Session=Depends(GetDatabase)):
+    service = SERVICE(db=db)
+    byte_image = io.BytesIO(initial_bytes=await image.read())
+    token_valid, _, _ = await service.VerifyToken(token=token)
+    
+    if token_valid:
+        return await service.GetLicensePlateNumber(image=byte_image)
+    else:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, 
+                            detail="Invalid Image Format")
     
 
 @router.delete("/delete_user", 
