@@ -54,27 +54,17 @@ def main():
             st.write(f"#### Coordinates: x_min={pred_xmin}, y_min={pred_ymin}, x_max={pred_xmax}, y_max={pred_ymax}")
             
         else:
-            plate_numbers = []
-            coordinates = []
             detected_image = image_np.copy()
-
+            
             for (xmin, ymin, xmax, ymax) in pred_info.xyxy.numpy().astype(np.int32):
                 roi = image_np[ymin:ymax, xmin:xmax]
                 plate_number = recognize_characters(roi)
-                plate_numbers.append(plate_number)
-                coordinates.append((xmin, ymin, xmax, ymax))
 
-                # Draw bounding box on image
-                detected_image = cv2.rectangle(detected_image, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
+                # Draw bounding box and text on image
+                cv2.rectangle(detected_image, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
+                cv2.putText(detected_image, plate_number, (xmin, ymin-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 2)
 
             st.image(detected_image, caption="Detected License Plates", use_column_width=True)
-            for i, (plate_number, (xmin, ymin, xmax, ymax)) in enumerate(zip(plate_numbers, coordinates)):
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.image(image_np[ymin:ymax, xmin:xmax], caption=f"License Plate Region {i+1}", use_column_width=True)
-                with col2:
-                    st.markdown(f"**Recognized License Plate Characters {i+1}:** {plate_number}")
-                    st.write(f"Coordinates {i+1}: x_min={xmin}, y_min={ymin}, x_max={xmax}, y_max={ymax}")
 
 if __name__ == "__main__":
     main()
