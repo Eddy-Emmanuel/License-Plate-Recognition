@@ -1,3 +1,4 @@
+dill
 opencv-python
 streamlit
 numpy
