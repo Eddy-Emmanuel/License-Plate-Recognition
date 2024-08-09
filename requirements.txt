@@ -1,5 +1,6 @@
 streamlit
 dill
+tesseract-ocr
 opencv-python
 opencv-python-headless
 pillow
