@@ -1,7 +1,6 @@
+opencv-python
 streamlit
-dill
-opencv-python-headless
+numpy
 pillow
-numpy 
-pytesseract
 ultralytics
+pytesseract
