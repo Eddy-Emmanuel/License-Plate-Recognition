@@ -6,7 +6,7 @@ from ultralytics import YOLO
 import pytesseract
 
 # Load the YOLO model
-pre_trained_yolo_model = YOLO(r"model/best.pt")
+pre_trained_yolo_model = YOLO(r"best.pt")
 
 def detect_license_plate(image):
     prediction = pre_trained_yolo_model(image)
