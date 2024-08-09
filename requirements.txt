@@ -1,6 +1,5 @@
 streamlit
 dill
-opencv-python
 opencv-python-headless
 pillow
 numpy 
