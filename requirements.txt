@@ -1,5 +1,4 @@
 dill
-tesseract-ocr
 opencv-python
 streamlit
 numpy
